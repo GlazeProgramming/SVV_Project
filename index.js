@@ -26,4 +26,8 @@ app.use("/", registerRoute);
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+	
+	console.log(`\n🎉 Ready to sign up! Open this link in your browser:`);
+    console.log(`   http://localhost:${PORT}/signup.html`);
+    console.log(`\n`);
 });

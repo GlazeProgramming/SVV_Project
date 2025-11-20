@@ -13,6 +13,18 @@
 
         <form id="signupForm" action="/register" method="POST">
 
+            <label for="firstname">First Name</label>
+            <input type="text" id="firstname" name="firstname" required>
+
+            <label for="lastname">Last Name</label>
+            <input type="text" id="lastname" name="lastname">
+
+            <label for="dob">Date of Birth</label>
+            <input type="date" id="dob" name="dob" required>
+
+            <label for="phonenumber">Phone Number (ex: +60xxxxx)</label>
+            <input type="tel" id="phonenumber" name="phonenumber" pattern="^\+[1-9]\d{1,14}$" required>
+            
             <label for="username">Username</label>
             <input type="text" id="username" name="username" required>
 

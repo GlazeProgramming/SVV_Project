@@ -5,13 +5,31 @@ const crypto = require("crypto");
 const db = require("../db");
 
 router.post("/register", async (req, res) => {
-    const { username, email, password, confirmPassword } = req.body;
+    const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword } = req.body;
 
-    // Basic Synchronous Validation
-    if (!username || !email || !password || !confirmPassword) {
+    // Required fields
+    if (!firstname || !dob || !phonenumber || !username || !email || !password || !confirmPassword) {
         return res.status(400).json({ 
             success: false, 
-            message: "All fields are required" 
+            message: "All fields are required except last name" 
+        });
+    }
+
+    // Firstname format & minimum length
+    const nameRegex = /^[A-Za-z ]{3,}$/;
+    if (!nameRegex.test(firstname)) {
+        return res.status(400).json({
+            success: false,
+            message: "Firstname must be at least 3 letters (A–Z only)"
+        });
+    }
+
+    // Phonenumber Format Validation
+    const phoneRegex = /^\+[1-9]\d{1,14}$/;
+    if (!phoneRegex.test(phonenumber)) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "Invalid phonenumber format" 
         });
     }
 	
@@ -85,7 +103,7 @@ router.post("/register", async (req, res) => {
             
             db.query(
                 insertQuery, 
-                [username, email, hashedPassword, verificationToken, false], 
+                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, false], 
                 (err, result) => {
                     if (err) {
                         console.error("Database insertion error:", err);

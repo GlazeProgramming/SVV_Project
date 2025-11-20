@@ -7,14 +7,33 @@ form.addEventListener("submit", async function (e) {
 	
 	errorMsg.textContent = "";
     
+    const firstname = document.getElementById("firstname").value.trim();
+    const lastname = document.getElementById("lastname").value.trim();
+    const dob = document.getElementById("dob").value.trim();
+    const phonenumber = document.getElementById('phonenumber').value.trim();
 	const username = document.getElementById("username").value.trim();
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
 
+     // Firstname length check and only allow character 
+    const nameRegex = /^[A-Za-z ]{3,}$/; 
+    if (!nameRegex.test(firstname)) {
+        errorMsg.textContent = "Firstname must be at least 3 letters (A-Z) only.";
+        return;
+    }
+
+    // Phone number: must be '+' and only digits
+    const phoneRegex = /^\+[0-9]{7,15}$/; 
+    if (!phoneRegex.test(phonenumber)) {
+        errorMsg.textContent = "Phone number must start with + and contain digits only (example: +60123456789).";
+        return;
+    }
+
     // Client-side Validation
-    if (!username || !email || !password || !confirmPassword) {
-        errorMsg.textContent = "All fields are required";
+    if (!firstname || !username || !email || !password || !confirmPassword ||
+        !dob || !phonenumber) {
+        errorMsg.textContent = "All fields are required except lastname";
         return;
     }
 
@@ -53,6 +72,10 @@ form.addEventListener("submit", async function (e) {
                 "Content-Type": "application/json", 
             },
             body: JSON.stringify({
+                firstname,
+                lastname,
+                dob,
+                phonenumber,
                 username,
                 email,
                 password,

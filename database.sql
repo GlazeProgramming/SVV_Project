@@ -10,3 +10,7 @@ CREATE TABLE users (
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE USER 'svvuser'@'localhost' IDENTIFIED BY 'svv123';
+GRANT ALL PRIVILEGES ON userdb.* TO 'svvuser'@'localhost';
+FLUSH PRIVILEGES;

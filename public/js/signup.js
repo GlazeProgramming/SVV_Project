@@ -87,7 +87,7 @@ form.addEventListener("submit", async function (e) {
 
         if (response.ok && data.success) {
             alert(data.message);
-            window.location.href = "/login.html"; 
+            window.location.href = "/activate.html"; 
             
         } else {
             errorMsg.textContent = data.message;

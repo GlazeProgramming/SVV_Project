@@ -4,6 +4,21 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const db = require("../db");
 
+// untuk email verif
+const nodemailer = require("nodemailer");
+const transporter_gmail = nodemailer.createTransport({
+    port: 465,
+    host: "smtp.gmail.com",
+    secure: true,
+    auth: {
+        user: 'edwanotruyadika26@gmail.com',
+        pass: 'lxfk nlhj umcy vuit',
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
+});
+
 router.post("/register", async (req, res) => {
     const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword } = req.body;
 
@@ -97,13 +112,13 @@ router.post("/register", async (req, res) => {
             const verificationToken = crypto.randomBytes(32).toString("hex");
 
             const insertQuery = `
-                INSERT INTO users (username, email, password_hash, verification_token, is_verified) 
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO users (firstname, lastname, dob, phonenumber, username, email, password_hash, verification_token, is_verified) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
             `;
             
             db.query(
                 insertQuery, 
-                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, false], 
+                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, false],
                 (err, result) => {
                     if (err) {
                         console.error("Database insertion error:", err);
@@ -112,6 +127,24 @@ router.post("/register", async (req, res) => {
                             message: "Failed to create account" 
                         });
                     }
+                    
+                    // kirim email otp
+                    var kalhtml = "<h3>OTP</h3>";
+                    kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
+                    const mailData = {
+                        from: 'edwanotruyadika26@gmail.com',
+                        to: email,
+                        subject: 'Your OTP Code',
+                        html: kalhtml
+                    };
+                    // transporter_gmail.sendMail(mailData, function (err, info) { });
+                    transporter_gmail.sendMail(mailData, function (err, info) {
+                        if (err) {
+                            console.log("Error: ", err);
+                        } else {
+                            console.log("Sent: ", info);
+                        }
+                    });
 
                     res.status(201).json({
                         success: true,
@@ -130,6 +163,80 @@ router.post("/register", async (req, res) => {
             message: "Server error occurred" 
         });
     }
+});
+
+
+router.post("/activate", (req, res) => {
+    const { username, token } = req.body;
+
+    if (!username || !token) {
+        return res.status(400).json({
+            success: false,
+            message: "Username and token are required"
+        });
+    }
+
+    // ngecek user
+    const sql = `
+        SELECT id, is_verified, verification_token 
+        FROM users 
+        WHERE username = ?
+    `;
+
+    db.query(sql, [username], (err, rows) => {
+        if (err) {
+            console.error("DB error during activation:", err);
+            return res.status(500).json({
+                success: false,
+                message: "Database error"
+            });
+        }
+
+        if (rows.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        const user = rows[0];
+
+        if (user.is_verified) {
+            return res.status(400).json({
+                success: false,
+                message: "Account already activated"
+            });
+        }
+
+        if (user.verification_token !== token) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid verification token"
+            });
+        }
+
+        // update is_verified
+        const updateSql = `
+            UPDATE users
+            SET is_verified = 1, verification_token = NULL
+            WHERE id = ?
+        `;
+
+        db.query(updateSql, [user.id], (updateErr) => {
+            if (updateErr) {
+                console.error("Activation update error:", updateErr);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to activate account"
+                });
+            }
+
+            return res.json({
+                success: true,
+                message: "Account activated successfully!"
+            });
+        });
+    });
 });
 
 module.exports = router;

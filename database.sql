@@ -1,6 +1,9 @@
 CREATE DATABASE userdb;
 USE userdb;
-
+ /*
+SELECT * FROM USERS;
+DROP TABLE users;
+*/
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     firstname VARCHAR(100) NOT NULL,

@@ -1,6 +1,7 @@
 const form = document.getElementById("signupForm");
 const errorMsg = document.getElementById("errorMsg");
 
+
 form.addEventListener("submit", async function (e) { 
 	
 	e.preventDefault();

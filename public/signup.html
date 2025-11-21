@@ -3,46 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sign Up</title>
+    <title>Register Page</title>
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
 
-    <div class="container">
-        <h2>Create Account</h2>
+    <div class="wrapper register">
+        <div class="form-box register">
+            <h2>Register</h2>
+            <form id="signupForm" action="/register" method="POST">
+                
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="id-card"></ion-icon></span>
+                    <input type="text" id="firstname" name="firstname" required>
+                    <label for="firstname">First Name</label>
+                </div>
 
-        <form id="signupForm" action="/register" method="POST">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="id-card"></ion-icon></span>
+                    <input type="text" id="lastname" name="lastname" required>
+                    <label for="lastname">Last Name</label>
+                </div>
 
-            <label for="firstname">First Name</label>
-            <input type="text" id="firstname" name="firstname" required>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="calendar"></ion-icon></span>
+                    <input type="date" id="dob" name="dob" required>
+                    <label for="dob">Date of Birth</label>
+                </div>
+                
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="calendar"></ion-icon></span>
+                    <input type="tel" id="phonenumber" name="phonenumber" pattern="^\+[1-9]\d{1,14}$" required>
+                    <label for="phonenumber">Phone Number (ex: +60xxxxx)</label>
+                </div>
 
-            <label for="lastname">Last Name</label>
-            <input type="text" id="lastname" name="lastname">
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="id-card"></ion-icon></span>
+                    <input type="text" id="username" name="username" required>
+                    <label for="username">Username</label>
+                </div>
 
-            <label for="dob">Date of Birth</label>
-            <input type="date" id="dob" name="dob" required>
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="mail"></ion-icon></span>
+                    <input type="email" id="email" name="email" required>
+                    <label for="email">Email</label>
+                </div>
 
-            <label for="phonenumber">Phone Number (ex: +60xxxxx)</label>
-            <input type="tel" id="phonenumber" name="phonenumber" pattern="^\+[1-9]\d{1,14}$" required>
-            
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" required>
+                 <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" id="password" name="password" required>
+                    <label for="password">Password</label>
+                </div>
 
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" required>
+                 <div class="input-box">
+                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <label for="confirmPassword">Confirm Password</label>
+                </div>
 
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" required>
+                <p id="errorMsg"></p>
 
-            <label for="confirmPassword">Confirm Password</label>
-            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                <div class="remember-forgot">
+                    <label><input type="checkbox"> I agree to the Terms & Conditions</label>
+                </div>
 
-            <p id="errorMsg"></p>
+                <button type="submit" class="btn">Register</button>
 
-            <button type="submit">Sign Up</button>
-        </form>
+                <div class="login-register">
+                    <p>Already have an account? <a href="login.html" class="register-link">Login</a></p>
+                </div>
+                
+            </form>
+        </div>
     </div>
 
     <script src="./js/signup.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
 </html>

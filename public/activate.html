@@ -2,35 +2,48 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Activate Account</title>
     <link rel="stylesheet" href="./css/styles.css">
 </head>
 <body>
-    <div class="container">
-        <h2>Activate Your Account</h2>
-        <p>Please enter your username and verification token from your email.</p>
+    <div class="wrapper">
+        <div class="form-box login">
 
-        <form id="activateForm">
-            <div>
-                <label for="username">Username</label><br>
-                <input type="text" id="username" name="username" required />
+            <h2>Activate Your Account</h2>
+            <p>Please enter your username and verification token from your email.</p>
+
+            <form id="activateForm">
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="id-card"></ion-icon></span>
+                    <input type="text" id="username" name="username" required/>
+                    <label for="username">Username</label><br>
+                </div>
+
+                <div class="input-box">
+                    <span class="icon"><ion-icon name="id-card"></ion-icon></span>
+                    <input type="text" id="token" name="token" required />
+                    <label for="token">Verification Token</label>
+                </div>
+
+                <p id="activateMsg" style="color: red; margin-top: 10px; border-radius: 6px; background: #fff; width: 40%; font-weight: 500;"></p>
+
+                <button class="btn" type="submit" style="margin-top: 10px;">Activate</button>
+            </form>
+
+            <div class="login-register">
+                <div id="links" style="margin-top: 15px; display:none;">
+                    <a href="signup.html" id="backToRegisterLink" class="register-link">Back to Register</a>
+                </div>
             </div>
 
-            <div style="margin-top: 10px;">
-                <label for="token">Verification Token</label><br>
-                <input type="text" id="token" name="token" required />
-            </div>
-
-            <p id="activateMsg" style="color: red; margin-top: 10px;"></p>
-
-            <button type="submit" style="margin-top: 10px;">Activate</button>
-        </form>
-
-        <div id="links" style="margin-top: 15px; display:none;">
-            <a href="/signup.html" id="backToRegisterLink">Back to Register</a>
         </div>
+        
     </div>
 
     <script src="./js/activate.js"></script>
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 </body>
 </html>

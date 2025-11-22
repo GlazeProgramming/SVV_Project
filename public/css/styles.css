@@ -42,6 +42,13 @@ body {
 	height: 900px;
 }
 
+.wrapper.activate{
+	height: 500px;
+}
+
+.wrapper.activate p{
+	color:#fff;
+}
 
 .form-box h2{
 	font-size: 2em;

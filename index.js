@@ -30,4 +30,28 @@ app.listen(PORT, () => {
 	console.log(`\n🎉 Ready to sign up! Open this link in your browser:`);
     console.log(`   http://localhost:${PORT}/signup.html`);
     console.log(`\n`);
+
+    const loginRoute = require("./routes/login");
+    app.use("/", loginRoute);
+
 });
+
+const rateLimit = require("express-rate-limit");
+
+// Define rate limiter for login route
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 login requests per `window` (15 mins)
+    message: {
+        success: false,
+        message: "Too many login attempts. Please try again after 15 minutes."
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Import login route if you have one
+const loginRoute = require("./routes/login"); // your login route
+
+// Apply rate limiter **only to login route**
+app.use("/login", loginLimiter, loginRoute);

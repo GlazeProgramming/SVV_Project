@@ -23,3 +23,5 @@ CREATE USER 'svvuser'@'localhost' IDENTIFIED BY 'svv123';
 GRANT ALL PRIVILEGES ON userdb.* TO 'svvuser'@'localhost';
 FLUSH PRIVILEGES;
 
+
+

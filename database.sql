@@ -9,7 +9,7 @@ CREATE TABLE users (
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100),
     dob DATE NOT NULL,
-    phonenumber VARCHAR(15) NOT NULL,
+    phonenumber VARCHAR(100) NOT NULL,
     username VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,

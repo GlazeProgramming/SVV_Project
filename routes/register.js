@@ -19,6 +19,57 @@ const transporter_gmail = nodemailer.createTransport({
     }
 });
 
+
+const KEY = crypto
+.createHash('sha256')
+.update(process.env.ENC_KEY || 'default_key')
+.digest();
+
+function deriveIV(text){
+    return crypto.createHash('sha256')
+    .update(process.env.SECRET_KEY + text)
+    .digest()
+    .subarray(0, 16);  // aes-cbc IV = 16 bytes
+}
+
+function encrypt(text){
+    const iv = deriveIV(process.env.ENC_KEY);
+    const cipher = crypto.createCipheriv('aes-256-cbc', KEY, iv);
+    const encrypted = Buffer.concat([cipher.update(text, 'utf8'), cipher.final()]);
+    return encrypted.toString('hex');
+}
+
+function decrypt(text){
+    const iv = deriveIV(process.env.ENC_KEY);
+    const encrypteddec = Buffer.from(text, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', KEY, iv);
+    return (Buffer.concat([decipher.update(encrypteddec), decipher.final()])).toString();
+}
+
+router.get("/getdata", async (req, res) => {
+    db.query(
+        "SELECT id, firstname, lastname, DATE(dob) AS dob, phonenumber, username, email FROM users",
+        (err, result) => {
+            if (err) {
+                console.error("Database selection error:", err);
+                return res.status(500).json({
+                    success: false,
+                    message: "Failed to get data"
+                });
+            }
+
+            // decrypt field 
+            for (let i = 0; i < result.length; i++) {
+                result[i].firstname = decrypt(result[i].firstname);
+                result[i].lastname = decrypt(result[i].lastname);
+                result[i].phonenumber = decrypt(result[i].phonenumber);
+            }
+
+            return res.status(200).json(result);
+        }
+    );
+});
+
 router.post("/register", async (req, res) => {
     const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword } = req.body;
 
@@ -116,9 +167,13 @@ router.post("/register", async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
             `;
             
+            var hashfirstname = encrypt(firstname);
+            var hashlastname = encrypt(lastname);
+            var hashphonenumber = encrypt(phonenumber);
+            
             db.query(
                 insertQuery, 
-                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, false],
+                [hashfirstname, hashlastname, dob, hashphonenumber, username, email, hashedPassword, verificationToken, false],
                 (err, result) => {
                     if (err) {
                         console.error("Database insertion error:", err);

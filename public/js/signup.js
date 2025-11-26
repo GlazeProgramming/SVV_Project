@@ -1,6 +1,11 @@
 const form = document.getElementById("signupForm");
 const errorMsg = document.getElementById("errorMsg");
 
+const dobInput = document.getElementById("dob");
+
+dobInput.parentElement.addEventListener("click", () => {
+    dobInput.showPicker?.();
+});
 
 form.addEventListener("submit", async function (e) { 
 	

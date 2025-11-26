@@ -10,7 +10,8 @@
 body {
 	display: flex;
 	justify-content: center;
-	align-items: center;
+	align-items: flex-start;   
+    padding-top: 40px;  
 	min-height: 100vh;
 	background: url('background.jpg') no-repeat;
 	background-size: cover;
@@ -18,6 +19,7 @@ body {
 }
 
 .wrapper{
+	margin-top: 20px;
 	position: relative;
 	width: 400px;
 	height: 440px;
@@ -101,30 +103,6 @@ body {
 	line-height: 57px;
 }
 
-.remember-forgot {
-	font-size: .9em;
-	color: #fff;
-	font-weight: 500;
-	margin: 15px 0 15px;
-	display: flex;
-	justify-content:  space-between;
-}
-
-.remember-forgot label input{
-	accent-color: #fff;
-	margin-right: 3px;
-}
-
-.remember-forgot a {
-	color: #fff;
-	text-decoration: none;
-}
-
-.remember-forgot a:hover {
-	text-decoration: underline;
-}
-
-
 .btn {
 	width: 100%;
 	height: 45px;
@@ -171,3 +149,84 @@ body {
 .login-register p a:hover{
 	text-decoration: underline;
 }
+
+/* Bigger custom calendar icon */
+.input-box .custom-calendar {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.3em;   /* make it bigger */
+    color: #fff;
+    pointer-events: none;  /* avoid blocking clicks */
+}
+
+/* Hide the internal date placeholder text */
+input[type="date"]::-webkit-datetime-edit {
+    color: transparent;          /* hide the placeholder */
+}
+
+/* Keep typed/selected date visible */
+input[type="date"]:not(:placeholder-shown)::-webkit-datetime-edit {
+    color: #fff;                 /* restore text color */
+}
+
+/* When date is picked, make text visible */
+input[type="date"]:valid::-webkit-datetime-edit {
+    color: #fff;
+}
+
+/* FULLY REMOVE CHROME AUTOFILL BACKGROUND */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 1000px transparent inset !important;
+    box-shadow: 0 0 0 1000px transparent inset !important;
+
+    background-color: transparent !important;
+    background-image: none !important;
+
+    -webkit-text-fill-color: #fff !important;
+    color: #fff !important;
+
+    transition: background-color 9999s ease-out, color 9999s ease-out;
+}
+
+input,
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+    font-family: 'Poppins', sans-serif !important;
+    -webkit-text-fill-color: #fff;  /* adjust as needed */
+    transition: background-color 9999s ease-in-out 0s;
+}
+
+input {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.input-box input[type="date"] ~ label {
+    top: -5px;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1); /* optional to recolor */
+    opacity: 1;        /* fully hides it */
+    cursor: pointer;
+	right: 10px;
+	position: absolute;
+}
+
+
+/* Hide the native calendar icon */
+input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity: 0;
+    cursor: pointer;
+}
+
+
+
+
+

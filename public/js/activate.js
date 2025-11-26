@@ -7,10 +7,12 @@ document.getElementById("activateForm").addEventListener("submit", async functio
     const linksDiv = document.getElementById("links");
 
     msg.textContent = "";
-    linksDiv.style.display = "none";
+    msg.classList.remove("visible", "error", "success");
+    linksDiv.classList.remove("visible");
 
     if (!username || !token) {
         msg.textContent = "Username and token are required.";
+        msg.classList.add("visible", "error");
         return;
     }
 
@@ -26,24 +28,24 @@ document.getElementById("activateForm").addEventListener("submit", async functio
         const data = await response.json();
 
         if (data.success) {
-            msg.style.color = "green";
             msg.textContent = "Email successfully activated! Redirecting to login page...";
+            msg.classList.add("visible", "success");
 
             // Redirect ke login setelah beberapa detik
             setTimeout(() => {
                 window.location.href = "/login.html";
             }, 2000);
         } else {
-            msg.style.color = "red";
             msg.textContent = data.message || "Activation failed.";
+            msg.classList.add("visible", "error");
 
             // Tampilkan link balik ke register
-            linksDiv.style.display = "block";
+            linksDiv.classList.add("visible");
         }
     } catch (error) {
         console.error("Activation error:", error);
-        msg.style.color = "red";
         msg.textContent = "Server error. Please try again later.";
-        linksDiv.style.display = "block";
+        msg.classList.add("visible", "error");
+        linksDiv.classList.add("visible");
     }
 });

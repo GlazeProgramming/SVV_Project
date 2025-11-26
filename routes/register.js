@@ -58,13 +58,6 @@ router.get("/getdata", async (req, res) => {
                 });
             } 
 
-            // decrypt field 
-            for (let i = 0; i < result.length; i++) {
-                result[i].firstname = decrypt(result[i].firstname);
-                result[i].lastname = decrypt(result[i].lastname);
-                result[i].phonenumber = decrypt(result[i].phonenumber);
-            }
-
             return res.status(200).json(result);
         }
     );
@@ -171,13 +164,9 @@ router.post("/register", async (req, res) => {
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             `;
             
-            var hashfirstname = encrypt(firstname);
-            var hashlastname = encrypt(lastname);
-            var hashphonenumber = encrypt(phonenumber);
-            
             db.query(
                 insertQuery, 
-                [hashfirstname, hashlastname, dob, hashphonenumber, username, email, hashedPassword, verificationToken, expiresAt],
+                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, expiresAt],
                 (err, result) => {
                     if (err) {
                         console.error("Database insertion error:", err);

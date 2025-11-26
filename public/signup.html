@@ -50,22 +50,30 @@
                     <label for="email">Email</label>
                 </div>
 
-                 <div class="input-box">
-                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                <div class="input-box has-toggle">
                     <input type="password" id="password" name="password" required>
+                    <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
+                        <ion-icon name="eye-off"></ion-icon>
+                    </button>
                     <label for="password">Password</label>
                 </div>
 
-                 <div class="input-box">
-                    <span class="icon"><ion-icon name="lock-closed"></ion-icon></span>
+                 <div class="input-box has-toggle">
                     <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <button type="button" class="toggle-password" data-target="confirmPassword" aria-label="Show password">
+                        <ion-icon name="eye-off"></ion-icon>
+                    </button>
                     <label for="confirmPassword">Confirm Password</label>
                 </div>
 
-                <p id="errorMsg"></p>
+                <p id="errorMsg" class="status-message"></p>
 
                 <div class="remember-forgot">
-                    <label><input type="checkbox"> I agree to the Terms & Conditions</label>
+                    <label class="checkbox-wrapper">
+                        <input type="checkbox" id="terms">
+                        <span class="custom-checkbox" aria-hidden="true"></span>
+                        <span class="checkbox-text">I agree to the Terms & Conditions</span>
+                    </label>
                 </div>
 
                 <button type="submit" class="btn">Register</button>

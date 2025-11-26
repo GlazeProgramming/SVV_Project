@@ -2,8 +2,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("signupForm"); // keep the same ID as your form
     const errorMsg = document.getElementById("errorMsg");
 
+    const setMessage = (message, type = "error") => {
+        if (!message) {
+            errorMsg.textContent = "";
+            errorMsg.classList.remove("visible", "error", "success");
+            return;
+        }
+
+        errorMsg.textContent = message;
+        errorMsg.classList.remove("error", "success");
+        errorMsg.classList.add("visible", type === "success" ? "success" : "error");
+    };
+
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
+        setMessage("");
 
         const data = {
             username: form.username.value.trim(),
@@ -19,8 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const result = await res.json();
 
-            errorMsg.textContent = result.message;
-            errorMsg.style.color = result.success ? "green" : "red";
+            setMessage(result.message, result.success ? "success" : "error");
 
             if (result.success) {
                 setTimeout(() => {
@@ -29,8 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (err) {
             console.error(err);
-            errorMsg.textContent = "Server error occurred";
-            errorMsg.style.color = "red";
+            setMessage("Server error occurred", "error");
         }
     });
 });

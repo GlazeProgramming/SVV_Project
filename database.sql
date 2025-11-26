@@ -14,14 +14,11 @@ CREATE TABLE users (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     verification_token VARCHAR(255),
+    token_expires_at DATETIME NULL,
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-DROP USER IF EXISTS 'svvuser'@'localhost';
-CREATE USER 'svvuser'@'localhost' IDENTIFIED BY 'svv123';
-GRANT ALL PRIVILEGES ON userdb.* TO 'svvuser'@'localhost';
-FLUSH PRIVILEGES;
 
 
 

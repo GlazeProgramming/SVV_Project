@@ -48,7 +48,7 @@ function decrypt(text){
 
 router.get("/getdata", async (req, res) => {
     db.query(
-        "SELECT id, firstname, lastname, DATE(dob) AS dob, phonenumber, username, email FROM users",
+        "SELECT id, firstname, lastname, DATE(dob) AS dob, phonenumber, username, email FROM users WHERE is_verified = 1",
         (err, result) => {
             if (err) {
                 console.error("Database selection error:", err);
@@ -56,7 +56,7 @@ router.get("/getdata", async (req, res) => {
                     success: false,
                     message: "Failed to get data"
                 });
-            }
+            } 
 
             // decrypt field 
             for (let i = 0; i < result.length; i++) {
@@ -161,10 +161,14 @@ router.post("/register", async (req, res) => {
             const hashedPassword = await bcrypt.hash(password, saltRounds);
 
             const verificationToken = crypto.randomBytes(32).toString("hex");
-
+            const expiresAt = new Date(Date.now() + 1 * 60 * 1000);
+            
             const insertQuery = `
-                INSERT INTO users (firstname, lastname, dob, phonenumber, username, email, password_hash, verification_token, is_verified) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0)
+                INSERT INTO users (
+                    firstname, lastname, dob, phonenumber, username, email, password_hash,
+                    verification_token, token_expires_at, is_verified
+                ) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
             `;
             
             var hashfirstname = encrypt(firstname);
@@ -173,7 +177,7 @@ router.post("/register", async (req, res) => {
             
             db.query(
                 insertQuery, 
-                [hashfirstname, hashlastname, dob, hashphonenumber, username, email, hashedPassword, verificationToken, false],
+                [hashfirstname, hashlastname, dob, hashphonenumber, username, email, hashedPassword, verificationToken, expiresAt],
                 (err, result) => {
                     if (err) {
                         console.error("Database insertion error:", err);
@@ -233,7 +237,7 @@ router.post("/activate", (req, res) => {
 
     // ngecek user
     const sql = `
-        SELECT id, is_verified, verification_token 
+        SELECT id, is_verified, verification_token, token_expires_at
         FROM users 
         WHERE username = ?
     `;
@@ -268,6 +272,28 @@ router.post("/activate", (req, res) => {
                 success: false,
                 message: "Invalid verification token"
             });
+        }
+
+        if (!user.token_expires_at || new Date() > new Date(user.token_expires_at)) {
+            const deleteSql = "DELETE FROM users WHERE id = ?";
+
+            db.query(deleteSql, [user.id], (delErr) => {
+                if (delErr) {
+                    console.error("Error deleting expired user:", delErr);
+                    //Failed to delete, still gives expired info to user
+                    return res.status(500).json({
+                        success: false,
+                        message: "Verification token has expired. Please try registering again later."
+                    });
+                }
+
+                return res.status(400).json({
+                    success: false,
+                    message: "Verification token has expired. Please register again."
+                });
+            });
+
+            return;
         }
 
         // update is_verified

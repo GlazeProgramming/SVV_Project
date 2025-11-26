@@ -12,10 +12,10 @@ form.addEventListener("submit", async function (e) {
         }
 
         const data = await response.json();
-        console.log("DATA DARI /getdata:", data);
+        console.log("DATA FROM /getdata:", data);
 
         if (!Array.isArray(data) || data.length === 0) {
-            div.innerHTML = "<p>Tidak ada data.</p>";
+            div.innerHTML = "<p>No Data.</p>";
             return;
         }
 
@@ -57,6 +57,6 @@ form.addEventListener("submit", async function (e) {
 
     } catch (error) {
         console.error("Fetch Error:", error);
-        div.innerHTML = "<p style='color:red;'>Terjadi kesalahan saat mengambil data.</p>";
+        div.innerHTML = "<p style='color:red;'>An error occurred while retrieving data.</p>";
     }
 });

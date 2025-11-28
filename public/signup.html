@@ -11,47 +11,47 @@
     <div class="wrapper register">
         <div class="form-box register">
             <h2>Register</h2>
-            <form id="signupForm" action="/register" method="POST">
+            <form id="signupForm" action="/register" method="POST" autocomplete="on">
                 
                 <div class="input-box">
                     <span class="icon"><ion-icon name="id-card"></ion-icon></span>
-                    <input type="text" id="firstname" name="firstname" required>
+                    <input type="text" id="firstname" name="firstname" autocomplete="given-name" required>
                     <label for="firstname">First Name</label>
                 </div>
 
                 <div class="input-box">
                     <span class="icon"><ion-icon name="id-card"></ion-icon></span>
-                    <input type="text" id="lastname" name="lastname" required>
+                    <input type="text" id="lastname" name="lastname" autocomplete="family-name" required>
                     <label for="lastname">Last Name</label>
                 </div>
 
                 <div class="input-box dob">
                     <span class="icon custom-calendar"><ion-icon name="calendar"></ion-icon></span>
-                    <input type="date" id="dob" name="dob" required>
+                    <input type="date" id="dob" name="dob" autocomplete="bday" required>
                     <label for="dob">Date of Birth</label>
                 </div>
 
                 
                 <div class="input-box">
                     <span class="icon"><ion-icon name="call"></ion-icon></ion-icon></span>
-                    <input type="tel" id="phonenumber" name="phonenumber" pattern="^\+[1-9]\d{1,14}$" required>
+                    <input type="tel" id="phonenumber" name="phonenumber" autocomplete="tel" pattern="^\+[1-9]\d{1,14}$" required>
                     <label for="phonenumber">Phone Number (ex: +60xxxxx)</label>
                 </div>
 
                 <div class="input-box">
                     <span class="icon"><ion-icon name="id-card"></ion-icon></span>
-                    <input type="text" id="username" name="username" required>
+                    <input type="text" id="username" name="username" autocomplete="username" required>
                     <label for="username">Username</label>
                 </div>
 
                 <div class="input-box">
                     <span class="icon"><ion-icon name="mail"></ion-icon></span>
-                    <input type="email" id="email" name="email" required>
+                    <input type="email" id="email" name="email" autocomplete="email" required>
                     <label for="email">Email</label>
                 </div>
 
                 <div class="input-box has-toggle">
-                    <input type="password" id="password" name="password" required>
+                    <input type="password" id="password" name="password" autocomplete="new-password" required>
                     <button type="button" class="toggle-password" data-target="password" aria-label="Show password">
                         <ion-icon name="eye-off"></ion-icon>
                     </button>
@@ -59,7 +59,7 @@
                 </div>
 
                  <div class="input-box has-toggle">
-                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" required>
                     <button type="button" class="toggle-password" data-target="confirmPassword" aria-label="Show password">
                         <ion-icon name="eye-off"></ion-icon>
                     </button>
@@ -70,7 +70,7 @@
 
                 <div class="remember-forgot">
                     <label class="checkbox-wrapper">
-                        <input type="checkbox" id="terms">
+                        <input type="checkbox" id="terms" name="terms" required>
                         <span class="custom-checkbox" aria-hidden="true"></span>
                         <span class="checkbox-text">I agree to the <a href="terms.html" target="_blank" rel="noopener" class="inline-link">Terms & Conditions</a></span>
                     </label>

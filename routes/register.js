@@ -64,13 +64,21 @@ router.get("/getdata", async (req, res) => {
 });
 
 router.post("/register", async (req, res) => {
-    const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword } = req.body;
+    const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword, terms } = req.body;
 
     // Required fields
     if (!firstname || !dob || !phonenumber || !username || !email || !password || !confirmPassword) {
         return res.status(400).json({ 
             success: false, 
             message: "All fields are required except last name" 
+        });
+    }
+
+    // Terms and Conditions agreement check
+    if (!terms || (terms !== true && terms !== "true" && terms !== "on")) {
+        return res.status(400).json({ 
+            success: false, 
+            message: "You must agree to the Terms & Conditions to register" 
         });
     }
 
@@ -118,8 +126,8 @@ router.post("/register", async (req, res) => {
     }
 
     try {
-        // Database Email Uniqueness Check
-        const checkEmailQuery = "SELECT id FROM users WHERE email = ? LIMIT 1"; 
+        // Database Email Uniqueness Check - only check verified users
+        const checkEmailQuery = "SELECT id FROM users WHERE email = ? AND is_verified = 1 LIMIT 1"; 
         
         db.query(checkEmailQuery, [email], async (err, results) => {
             if (err) {
@@ -137,71 +145,103 @@ router.post("/register", async (req, res) => {
                 });
             }
 
-            // Combined Password Complexity Check
-            // Requires: at least one lowercase, one uppercase, one digit, and one special character.
-            const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
+            // Check username uniqueness - only check verified users
+            const checkUsernameQuery = "SELECT id FROM users WHERE username = ? AND is_verified = 1 LIMIT 1";
 
-            if (!complexityRegex.test(password)) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: "Password must include an uppercase letter, a lowercase letter, a digit, and a special character." 
-                });
-            }
-
-            // Insertion
-            
-            const saltRounds = 10;
-            const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-            const verificationToken = crypto.randomBytes(32).toString("hex");
-            const expiresAt = new Date(Date.now() + 1 * 60 * 1000);
-            
-            const insertQuery = `
-                INSERT INTO users (
-                    firstname, lastname, dob, phonenumber, username, email, password_hash,
-                    verification_token, token_expires_at, is_verified
-                ) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-            `;
-            
-            db.query(
-                insertQuery, 
-                [firstname, lastname, dob, phonenumber, username, email, hashedPassword, verificationToken, expiresAt],
-                (err, result) => {
-                    if (err) {
-                        console.error("Database insertion error:", err);
-                        return res.status(500).json({ 
-                            success: false, 
-                            message: "Failed to create account" 
-                        });
-                    }
-                    
-                    // kirim email otp
-                    var kalhtml = "<h3>OTP</h3>";
-                    kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
-                    const mailData = {
-                        from: 'edwanotruyadika26@gmail.com',
-                        to: email,
-                        subject: 'Your OTP Code',
-                        html: kalhtml
-                    };
-                    // transporter_gmail.sendMail(mailData, function (err, info) { });
-                    transporter_gmail.sendMail(mailData, function (err, info) {
-                        if (err) {
-                            console.log("Error: ", err);
-                        } else {
-                            console.log("Sent: ", info);
-                        }
-                    });
-
-                    res.status(201).json({
-                        success: true,
-                        message: "Account created successfully! Please verify your email.",
-                        userId: result.insertId,
-                        verificationToken: verificationToken
+            db.query(checkUsernameQuery, [username], async (usernameErr, usernameResults) => {
+                if (usernameErr) {
+                    console.error("Database error:", usernameErr);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: "Server error occurred" 
                     });
                 }
-            );
+
+                if (usernameResults.length > 0) {
+                    return res.status(409).json({ 
+                        success: false, 
+                        message: "Username already taken" 
+                    });
+                }
+
+                // Combined Password Complexity Check
+                // Requires: at least one lowercase, one uppercase, one digit, and one special character.
+                const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
+
+                if (!complexityRegex.test(password)) {
+                    return res.status(400).json({ 
+                        success: false, 
+                        message: "Password must include an uppercase letter, a lowercase letter, a digit, and a special character." 
+                    });
+                }
+
+                // Store only minimal data (email, username, password, token) for verification
+                // Sensitive data (firstname, lastname, phonenumber, dob) will be stored AFTER verification
+                const saltRounds = 10;
+                const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+                const verificationToken = crypto.randomBytes(32).toString("hex");
+                const expiresAt = new Date(Date.now() + 1 * 60 * 1000);
+                
+                // Store sensitive data as JSON string in verification_token field temporarily
+                // This allows us to retrieve it after verification without changing DB schema
+                const pendingData = JSON.stringify({
+                    firstname,
+                    lastname,
+                    dob,
+                    phonenumber,
+                    token: verificationToken
+                });
+                
+                // Insert minimal data: use placeholder values for required NOT NULL fields
+                // These will be updated with real values after email verification
+                const insertQuery = `
+                    INSERT INTO users (
+                        firstname, lastname, dob, phonenumber, username, email, password_hash,
+                        verification_token, token_expires_at, is_verified
+                    ) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+                `;
+                
+                // Store real data in verification_token as JSON, use placeholders for required fields
+                db.query(
+                    insertQuery, 
+                    ['PENDING', '', '2000-01-01', '+00000000000', username, email, hashedPassword, pendingData, expiresAt],
+                    (err, result) => {
+                        if (err) {
+                            console.error("Database insertion error:", err);
+                            return res.status(500).json({ 
+                                success: false, 
+                                message: "Failed to create account" 
+                            });
+                        }
+                        
+                        // kirim email otp
+                        var kalhtml = "<h3>OTP</h3>";
+                        kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
+                        const mailData = {
+                            from: 'edwanotruyadika26@gmail.com',
+                            to: email,
+                            subject: 'Your OTP Code',
+                            html: kalhtml
+                        };
+                        // transporter_gmail.sendMail(mailData, function (err, info) { });
+                        transporter_gmail.sendMail(mailData, function (err, info) {
+                            if (err) {
+                                console.log("Error: ", err);
+                            } else {
+                                console.log("Sent: ", info);
+                            }
+                        });
+
+                        res.status(201).json({
+                            success: true,
+                            message: "Registration successful! Please verify your email. Your account details will be saved after verification.",
+                            verificationToken: verificationToken
+                        });
+                    }
+                );
+            });
         });
 
     } catch (error) {
@@ -224,11 +264,11 @@ router.post("/activate", (req, res) => {
         });
     }
 
-    // ngecek user
+    // Check for pending registration
     const sql = `
         SELECT id, is_verified, verification_token, token_expires_at
         FROM users 
-        WHERE username = ?
+        WHERE username = ? AND is_verified = 0
     `;
 
     db.query(sql, [username], (err, rows) => {
@@ -243,33 +283,39 @@ router.post("/activate", (req, res) => {
         if (rows.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: "User not found"
+                message: "Pending registration not found"
             });
         }
 
         const user = rows[0];
 
-        if (user.is_verified) {
-            return res.status(400).json({
+        // Parse the stored JSON data
+        let pendingData;
+        try {
+            pendingData = JSON.parse(user.verification_token);
+        } catch (parseErr) {
+            console.error("Error parsing pending data:", parseErr);
+            return res.status(500).json({
                 success: false,
-                message: "Account already activated"
+                message: "Invalid registration data"
             });
         }
 
-        if (user.verification_token !== token) {
+        // Verify token matches
+        if (pendingData.token !== token) {
             return res.status(400).json({
                 success: false,
                 message: "Invalid verification token"
             });
         }
 
+        // Check if token expired
         if (!user.token_expires_at || new Date() > new Date(user.token_expires_at)) {
             const deleteSql = "DELETE FROM users WHERE id = ?";
 
             db.query(deleteSql, [user.id], (delErr) => {
                 if (delErr) {
                     console.error("Error deleting expired user:", delErr);
-                    //Failed to delete, still gives expired info to user
                     return res.status(500).json({
                         success: false,
                         message: "Verification token has expired. Please try registering again later."
@@ -285,27 +331,37 @@ router.post("/activate", (req, res) => {
             return;
         }
 
-        // update is_verified
+        // NOW store the actual user details after successful verification
         const updateSql = `
             UPDATE users
-            SET is_verified = 1, verification_token = NULL
+            SET firstname = ?,
+                lastname = ?,
+                dob = ?,
+                phonenumber = ?,
+                is_verified = 1,
+                verification_token = NULL,
+                token_expires_at = NULL
             WHERE id = ?
         `;
 
-        db.query(updateSql, [user.id], (updateErr) => {
-            if (updateErr) {
-                console.error("Activation update error:", updateErr);
-                return res.status(500).json({
-                    success: false,
-                    message: "Failed to activate account"
+        db.query(
+            updateSql, 
+            [pendingData.firstname, pendingData.lastname || null, pendingData.dob, pendingData.phonenumber, user.id],
+            (updateErr) => {
+                if (updateErr) {
+                    console.error("Activation update error:", updateErr);
+                    return res.status(500).json({
+                        success: false,
+                        message: "Failed to activate account"
+                    });
+                }
+
+                return res.json({
+                    success: true,
+                    message: "Account activated successfully! Your details have been saved."
                 });
             }
-
-            return res.json({
-                success: true,
-                message: "Account activated successfully!"
-            });
-        });
+        );
     });
 });
 

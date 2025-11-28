@@ -123,6 +123,13 @@ form.addEventListener("submit", async function (e) {
         showError("Password must include an uppercase letter, a lowercase letter, a digit, and a special character.");
         return;
     }
+
+    // Terms and Conditions checkbox validation
+    const termsCheckbox = document.getElementById("terms");
+    if (!termsCheckbox.checked) {
+        showError("You must agree to the Terms & Conditions to register.");
+        return;
+    }
 	
 	// Send data using fetch to the server
     try {
@@ -140,6 +147,7 @@ form.addEventListener("submit", async function (e) {
                 email,
                 password,
                 confirmPassword,
+                terms: document.getElementById("terms").checked,
             }),
         });
 

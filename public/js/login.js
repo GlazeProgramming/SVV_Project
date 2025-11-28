@@ -2,6 +2,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("signupForm"); // keep the same ID as your form
     const errorMsg = document.getElementById("errorMsg");
 
+    // Password toggle functionality
+    document.querySelectorAll(".toggle-password").forEach((button) => {
+        button.addEventListener("click", () => {
+            const target = document.getElementById(button.dataset.target);
+            if (!target) return;
+            const isHidden = target.type === "password";
+            target.type = isHidden ? "text" : "password";
+
+            const icon = button.querySelector("ion-icon");
+            icon?.setAttribute("name", isHidden ? "eye" : "eye-off");
+
+            button.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+        });
+    });
+
     const setMessage = (message, type = "error") => {
         if (!message) {
             errorMsg.textContent = "";
@@ -36,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (result.success) {
                 setTimeout(() => {
-                    window.location.href = "dashboard.html"; // redirect after login
+                    window.location.href = "success.html"; // redirect to success page after login
                 }, 1000);
             }
         } catch (err) {

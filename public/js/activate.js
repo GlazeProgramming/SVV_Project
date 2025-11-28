@@ -31,7 +31,7 @@ document.getElementById("activateForm").addEventListener("submit", async functio
             msg.textContent = "Email successfully activated! Redirecting to login page...";
             msg.classList.add("visible", "success");
 
-            // Redirect ke login setelah beberapa detik
+            // Redirect to login page after a few seconds
             setTimeout(() => {
                 window.location.href = "/login.html";
             }, 2000);
@@ -39,7 +39,7 @@ document.getElementById("activateForm").addEventListener("submit", async functio
             msg.textContent = data.message || "Activation failed.";
             msg.classList.add("visible", "error");
 
-            // Tampilkan link balik ke register
+            // Display a link back to the register
             linksDiv.classList.add("visible");
         }
     } catch (error) {

@@ -4,7 +4,7 @@ const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
 const db = require("../db");
 
-// untuk email verif
+// for email verification
 const nodemailer = require("nodemailer");
 const transporter_gmail = nodemailer.createTransport({
     port: 465,
@@ -181,7 +181,7 @@ router.post("/register", async (req, res) => {
                 const hashedPassword = await bcrypt.hash(password, saltRounds);
 
                 const verificationToken = crypto.randomBytes(32).toString("hex");
-                const expiresAt = new Date(Date.now() + 1 * 60 * 1000);
+                const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes 
                 
                 // Store sensitive data as JSON string in verification_token field temporarily
                 // This allows us to retrieve it after verification without changing DB schema
@@ -216,7 +216,7 @@ router.post("/register", async (req, res) => {
                             });
                         }
                         
-                        // kirim email otp
+                        // send email otp
                         var kalhtml = "<h3>OTP</h3>";
                         kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
                         const mailData = {

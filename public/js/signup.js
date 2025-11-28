@@ -11,15 +11,22 @@ const clearError = () => {
     errorMsg.classList.remove("visible", "error");
 };
 
+// DOB input
 const dobInput = document.getElementById("dob");
 
-const today = new Date();
-const minAgeDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
-dobInput.max = minAgeDate.toISOString().split("T")[0];
-
+// Auto-open datepicker when clicking input wrapper
 dobInput.parentElement.addEventListener("click", () => {
     dobInput.showPicker?.();
 });
+
+// Limit DOB to only 18–100 years old
+const today = new Date();
+const minAgeDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+const maxAgeDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+
+dobInput.max = minAgeDate.toISOString().split("T")[0]; // youngest allowed (18 y/o)
+dobInput.min = maxAgeDate.toISOString().split("T")[0]; // oldest allowed (100 y/o)
+
 
 document.querySelectorAll(".toggle-password").forEach((button) => {
     button.addEventListener("click", () => {
@@ -96,6 +103,11 @@ form.addEventListener("submit", async function (e) {
         errorMsg.textContent = "You must be at least 18 years old to register.";
         return;
     }
+    // Maximum age (not older than 100)
+    if (age > 100) {
+        errorMsg.textContent = "Birth year too old. Please enter a valid date of birth.";
+        return;
+    }
 
 	// Email Format Validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -104,15 +116,15 @@ form.addEventListener("submit", async function (e) {
         return;
     }
 
-	// Password Match check
-    if (password !== confirmPassword) {
-        showError("Passwords do not match");
-        return;
-    }
-	
 	// Password length check
     if (password.length < 6) {
         showError("Password must be at least 6 characters long");
+        return;
+    }
+
+	// Password Match check
+    if (password !== confirmPassword) {
+        showError("Passwords do not match");
         return;
     }
 

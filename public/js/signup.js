@@ -66,25 +66,88 @@ form.addEventListener("submit", async function (e) {
     const firstname = document.getElementById("firstname").value.trim();
     const lastname = document.getElementById("lastname").value.trim();
     const dob = document.getElementById("dob").value.trim();
-    const phonenumber = document.getElementById('phonenumber').value.trim();
+	const countryCode = document.getElementById("countryCode").value;
+	const localNumber = document.getElementById("localNumber").value.trim();
+	const phonenumber = countryCode + localNumber;
 	const username = document.getElementById("username").value.trim();
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
     const confirmPassword = document.getElementById("confirmPassword").value.trim();
-
-     // Firstname length check and only allow character 
-    const nameRegex = /^[A-Za-z ]{3,}$/; 
-    if (!nameRegex.test(firstname)) {
-        showError("Firstname must be at least 3 letters (A-Z) only.");
+	
+	const MAX_USERNAME_LEN = 100;
+    const MAX_NAME_LEN = 30; 
+	const MIN_PHONE_DIGITS = 7; 
+    const MAX_PHONE_DIGITS = 15; 
+    const MAX_PHONE_FULL_LEN = 30; 
+    const MAX_EMAIL_LEN = 255; 
+    const MAX_PASSWORD_LEN = 128;
+	
+	if (username.length > MAX_USERNAME_LEN) {
+        showError(`Username cannot exceed ${MAX_USERNAME_LEN} characters.`);
         return;
     }
 
-    // Phone number: must be '+' and only digits
-    const phoneRegex = /^\+[0-9]{7,15}$/; 
-    if (!phoneRegex.test(phonenumber)) {
-        showError("Phone number must start with + and contain digits only (example: +60123456789).");
+    if (firstname.length > MAX_NAME_LEN) {
+        showError(`Firstname cannot exceed ${MAX_NAME_LEN} characters.`);
         return;
     }
+    
+    if (lastname.length > MAX_NAME_LEN) {
+        showError(`Lastname cannot exceed ${MAX_NAME_LEN} characters.`);
+        return;
+    }
+	
+	if (!countryCode) {
+	        showError("Please select a Country Code.");
+	        return;
+	    }
+		
+	if (phonenumber.length > MAX_PHONE_FULL_LEN) {
+	        showError(`The phone number is too long. The total length (code + local) cannot exceed ${MAX_PHONE_FULL_LEN} characters.`);
+	        return;
+	    }    
+
+    if (email.length > MAX_EMAIL_LEN) {
+        showError(`Email cannot exceed ${MAX_EMAIL_LEN} characters.`);
+        return;
+    }
+    
+    if (password.length > MAX_PASSWORD_LEN) {
+        showError(`Password cannot exceed ${MAX_PASSWORD_LEN} characters.`);
+        return;
+    }
+	
+    const generalNameRegex = /^[A-Za-z ]+$/;
+	// 1. Firstname: Check minimum length (3) AND format
+    if (firstname.length < 3 || !generalNameRegex.test(firstname)) {
+        showError("Firstname must be at least 3 characters and can only contain letters and spaces.");
+        return;
+    }
+    
+    // 2. Lastname: Check format ONLY if provided (since it's optional)
+    if (lastname && !generalNameRegex.test(lastname)) {
+        showError("Lastname can only contain letters and spaces.");
+        return;
+    }
+
+	// New Local Number Format and Length Check
+	const localNumberRegex = /^[0-9]+$/; 
+	    
+	    if (!localNumberRegex.test(localNumber)) {
+	        showError("The local phone number can only contain digits (0-9).");
+	        return;
+	    }
+	    
+	    if (localNumber.length < MIN_PHONE_DIGITS || localNumber.length > MAX_PHONE_DIGITS) {
+	        showError(`The local phone number must be between ${MIN_PHONE_DIGITS} and ${MAX_PHONE_DIGITS} digits long.`);
+	        return;
+	    }
+
+	    // Country Code Check
+	    if (!countryCode.startsWith('+') || countryCode.length < 2) {
+	        showError("Please select or enter a valid Country Code starting with '+'.");
+	        return;
+	    }
 
     // Client-side Validation
     if (!firstname || !username || !email || !password || !confirmPassword ||
@@ -177,5 +240,4 @@ form.addEventListener("submit", async function (e) {
         console.error("Fetch Error:", error);
         showError("A network error occurred. Please try again.");
     }
-
 });

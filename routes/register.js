@@ -63,15 +63,147 @@ router.get("/getdata", async (req, res) => {
     );
 });
 
+// This prevents code duplication in the main route
+async function proceedToUsernameCheck(req, res, username, email, password) {
+    // Re-declare local variables needed in this scope
+    const { firstname, lastname, dob, phonenumber } = req.body;
+    
+    // Check username uniqueness - only check verified users
+    const checkUsernameQuery = "SELECT id FROM users WHERE username = ? AND is_verified = 1 LIMIT 1";
+
+    db.query(checkUsernameQuery, [username], async (usernameErr, usernameResults) => {
+        if (usernameErr) {
+            console.error("Database error:", usernameErr);
+            return res.status(500).json({ 
+                success: false, 
+                message: "Server error occurred" 
+            });
+        }
+
+        if (usernameResults.length > 0) {
+            return res.status(409).json({ 
+                success: false, 
+                message: "Username already taken" 
+            });
+        }
+
+        // Combined Password Complexity Check
+        const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
+
+        if (!complexityRegex.test(password)) {
+            return res.status(400).json({ 
+                success: false, 
+                message: "Password must include an uppercase letter, a lowercase letter, a digit, and a special character." 
+            });
+        }
+
+        // Hashing and Insertion
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+        const verificationToken = crypto.randomBytes(32).toString("hex");
+        const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes 
+        
+        // Store sensitive data as JSON string in verification_token field temporarily
+        const pendingData = JSON.stringify({
+            firstname,
+            lastname,
+            dob,
+            phonenumber,
+            token: verificationToken
+        });
+        
+        // Insert minimal data
+        const insertQuery = `
+            INSERT INTO users (
+                firstname, lastname, dob, phonenumber, username, email, password_hash,
+                verification_token, token_expires_at, is_verified
+            ) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
+        `;
+        
+        db.query(
+            insertQuery, 
+            ['PENDING', '', '2000-01-01', '+00000000000', username, email, hashedPassword, pendingData, expiresAt],
+            (err, result) => {
+                if (err) {
+                    console.error("Database insertion error:", err);
+                    return res.status(500).json({ 
+                        success: false, 
+                        message: "Failed to create account" 
+                    });
+                }
+                
+                // send email otp
+                var kalhtml = "<h3>OTP</h3>";
+                kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
+                const mailData = {
+                    from: 'edwanotruyadika26@gmail.com',
+                    to: email,
+                    subject: 'Your OTP Code',
+                    html: kalhtml
+                };
+                transporter_gmail.sendMail(mailData, function (err, info) {
+                    if (err) {
+                        console.log("Error: ", err);
+                    } else {
+                        console.log("Sent: ", info);
+                    }
+                });
+
+                res.status(201).json({
+                    success: true,
+                    message: "Registration successful! Please verify your email. Your account details will be saved after verification.",
+                    verificationToken: verificationToken
+                });
+            }
+        );
+    });
+}
+
+
 router.post("/register", async (req, res) => {
     const { firstname, lastname, dob, phonenumber, username, email, password, confirmPassword, terms } = req.body;
 
-    // Required fields
+    // Required fields check
     if (!firstname || !dob || !phonenumber || !username || !email || !password || !confirmPassword) {
         return res.status(400).json({ 
             success: false, 
             message: "All fields are required except last name" 
         });
+    }
+
+    const MAX_USERNAME_LEN = 100;
+    const MAX_NAME_LEN = 30; // Protection for verification_token field
+	const MAX_PHONE_DIGITS = 20;
+	const MAX_PHONE_FULL_LEN = 30; 
+    const MAX_EMAIL_LEN = 255; 
+    const MAX_PASSWORD_LEN = 128;
+
+    if (username.length > MAX_USERNAME_LEN) {
+        return res.status(400).json({ success: false, message: `Username cannot exceed ${MAX_USERNAME_LEN} characters.` });
+    }
+
+    if (firstname.length > MAX_NAME_LEN) {
+        return res.status(400).json({ success: false, message: `Firstname cannot exceed ${MAX_NAME_LEN} characters.` });
+    }
+    
+    // Lastname is optional, but still needs a length check if provided
+    if (lastname && lastname.length > MAX_NAME_LEN) { 
+        return res.status(400).json({ success: false, message: `Lastname cannot exceed ${MAX_NAME_LEN} characters.` });
+    }
+
+	if (phonenumber.length > MAX_PHONE_FULL_LEN) {
+	        return res.status(400).json({ success: false, message: `The phone number is too long. The total length (code + local) cannot exceed ${MAX_PHONE_FULL_LEN} characters.` });
+	    }
+
+    if (email.length > MAX_EMAIL_LEN) {
+        return res.status(400).json({ success: false, message: `Email cannot exceed ${MAX_EMAIL_LEN} characters.` });
+    }
+
+    // Password length check
+    if (password.length > MAX_PASSWORD_LEN) {
+        return res.status(400).json({ success: false, message: `Password cannot exceed ${MAX_PASSWORD_LEN} characters.` });
     }
 
     // Terms and Conditions agreement check
@@ -83,20 +215,30 @@ router.post("/register", async (req, res) => {
     }
 
     // Firstname format & minimum length
-    const nameRegex = /^[A-Za-z ]{3,}$/;
-    if (!nameRegex.test(firstname)) {
+	const generalNameRegex = /^[A-Za-z ]+$/;
+
+    // 1. Firstname: Check minimum length (3) AND format
+    if (firstname.length < 3 || !generalNameRegex.test(firstname)) {
         return res.status(400).json({
             success: false,
-            message: "Firstname must be at least 3 letters (A–Z only)"
+            message: "Firstname must be at least 3 characters and can only contain letters and spaces."
+        });
+    }
+
+    // 2. Lastname: Check format ONLY if provided
+    if (lastname && !generalNameRegex.test(lastname)) {
+         return res.status(400).json({
+            success: false,
+            message: "Lastname can only contain letters and spaces."
         });
     }
 
     // Phonenumber Format Validation
-    const phoneRegex = /^\+[1-9]\d{1,14}$/;
-    if (!phoneRegex.test(phonenumber)) {
+	const combinedPhoneRegex = /^\+\d{7,20}$/; 
+    if (!combinedPhoneRegex.test(phonenumber)) {
         return res.status(400).json({ 
             success: false, 
-            message: "Invalid phonenumber format" 
+            message: "Invalid phone number format. Must start with '+' followed by 7 to 20 digits." 
         });
     }
 	
@@ -117,7 +259,7 @@ router.post("/register", async (req, res) => {
         });
     }
     
-    // Password length check
+    // Password length check (minimum)
     if (password.length < 6) {
         return res.status(400).json({ 
             success: false, 
@@ -126,8 +268,8 @@ router.post("/register", async (req, res) => {
     }
 
     try {
-        // Database Email Uniqueness Check - only check verified users
-        const checkEmailQuery = "SELECT id FROM users WHERE email = ? AND is_verified = 1 LIMIT 1"; 
+        // Step 1: Database Email Uniqueness Check (Check for ALL users, verified or not)
+        const checkEmailQuery = "SELECT id, is_verified FROM users WHERE email = ? LIMIT 1"; 
         
         db.query(checkEmailQuery, [email], async (err, results) => {
             if (err) {
@@ -139,109 +281,33 @@ router.post("/register", async (req, res) => {
             }
 
             if (results.length > 0) {
-                return res.status(409).json({ 
-                    success: false, 
-                    message: "Email already registered" 
-                });
-            }
-
-            // Check username uniqueness - only check verified users
-            const checkUsernameQuery = "SELECT id FROM users WHERE username = ? AND is_verified = 1 LIMIT 1";
-
-            db.query(checkUsernameQuery, [username], async (usernameErr, usernameResults) => {
-                if (usernameErr) {
-                    console.error("Database error:", usernameErr);
-                    return res.status(500).json({ 
-                        success: false, 
-                        message: "Server error occurred" 
-                    });
-                }
-
-                if (usernameResults.length > 0) {
+                const existingUser = results[0];
+                
+                // Case A: Email belongs to an already verified user
+                if (existingUser.is_verified === 1) {
                     return res.status(409).json({ 
                         success: false, 
-                        message: "Username already taken" 
+                        message: "Email already registered and verified." 
                     });
-                }
-
-                // Combined Password Complexity Check
-                // Requires: at least one lowercase, one uppercase, one digit, and one special character.
-                const complexityRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{6,}$/;
-
-                if (!complexityRegex.test(password)) {
-                    return res.status(400).json({ 
-                        success: false, 
-                        message: "Password must include an uppercase letter, a lowercase letter, a digit, and a special character." 
-                    });
-                }
-
-                // Store only minimal data (email, username, password, token) for verification
-                // Sensitive data (firstname, lastname, phonenumber, dob) will be stored AFTER verification
-                const saltRounds = 10;
-                const hashedPassword = await bcrypt.hash(password, saltRounds);
-
-                const verificationToken = crypto.randomBytes(32).toString("hex");
-                const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes 
+                } 
                 
-                // Store sensitive data as JSON string in verification_token field temporarily
-                // This allows us to retrieve it after verification without changing DB schema
-                const pendingData = JSON.stringify({
-                    firstname,
-                    lastname,
-                    dob,
-                    phonenumber,
-                    token: verificationToken
-                });
-                
-                // Insert minimal data: use placeholder values for required NOT NULL fields
-                // These will be updated with real values after email verification
-                const insertQuery = `
-                    INSERT INTO users (
-                        firstname, lastname, dob, phonenumber, username, email, password_hash,
-                        verification_token, token_expires_at, is_verified
-                    ) 
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)
-                `;
-                
-                // Store real data in verification_token as JSON, use placeholders for required fields
-                db.query(
-                    insertQuery, 
-                    ['PENDING', '', '2000-01-01', '+00000000000', username, email, hashedPassword, pendingData, expiresAt],
-                    (err, result) => {
-                        if (err) {
-                            console.error("Database insertion error:", err);
-                            return res.status(500).json({ 
-                                success: false, 
-                                message: "Failed to create account" 
-                            });
+                // Case B: Email belongs to an unverified user (delete old entry)
+                else {
+                    const deleteUnverifiedQuery = "DELETE FROM users WHERE id = ?";
+                    db.query(deleteUnverifiedQuery, [existingUser.id], (deleteErr) => {
+                        if (deleteErr) {
+                            console.error("Database deletion error for unverified user:", deleteErr);
+                            // Log the error but continue, as the deletion is not critical to stop registration
                         }
-                        
-                        // send email otp
-                        var kalhtml = "<h3>OTP</h3>";
-                        kalhtml = kalhtml + "<h1>Your Verification token is " + verificationToken + "<h1>"; 
-                        const mailData = {
-                            from: 'edwanotruyadika26@gmail.com',
-                            to: email,
-                            subject: 'Your OTP Code',
-                            html: kalhtml
-                        };
-                        // transporter_gmail.sendMail(mailData, function (err, info) { });
-                        transporter_gmail.sendMail(mailData, function (err, info) {
-                            if (err) {
-                                console.log("Error: ", err);
-                            } else {
-                                console.log("Sent: ", info);
-                            }
-                        });
+                        // Continue to username check and insertion after deleting the old row
+                        proceedToUsernameCheck(req, res, username, email, password); 
+                    });
+                    return; // Stop current execution flow
+                }
+            }
 
-                        res.status(201).json({
-                            success: true,
-                            message: "Registration successful! Please verify your email. Your account details will be saved after verification.",
-                            verificationToken: verificationToken
-                        });
-                    }
-                );
-            });
+            // Case C: Email is not found in the database (proceed normally)
+            proceedToUsernameCheck(req, res, username, email, password);
         });
 
     } catch (error) {
@@ -252,7 +318,6 @@ router.post("/register", async (req, res) => {
         });
     }
 });
-
 
 router.post("/activate", (req, res) => {
     const { username, token } = req.body;

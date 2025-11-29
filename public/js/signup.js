@@ -11,6 +11,70 @@ const clearError = () => {
     errorMsg.classList.remove("visible", "error");
 };
 
+// Hide country name after selection - show only the code
+// But keep full names visible in the dropdown
+const countryCodeSelect = document.getElementById("countryCode");
+if (countryCodeSelect) {
+    // Store original option texts
+    Array.from(countryCodeSelect.options).forEach(option => {
+        if (option.text) {
+            option.setAttribute("data-full-text", option.text);
+        }
+    });
+    
+    // Function to restore all options to full text (for dropdown display)
+    function restoreAllOptionTexts() {
+        Array.from(countryCodeSelect.options).forEach(option => {
+            const fullText = option.getAttribute("data-full-text");
+            if (fullText && option.text !== fullText) {
+                option.text = fullText;
+            }
+        });
+    }
+    
+    // Function to show only code for selected option
+    function showCodeOnly() {
+        const selectedOption = countryCodeSelect.options[countryCodeSelect.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const fullText = selectedOption.getAttribute("data-full-text") || selectedOption.text;
+            const codeMatch = fullText.match(/^(\+\d+)/);
+            if (codeMatch) {
+                selectedOption.text = codeMatch[1];
+            }
+        }
+    }
+    
+    // When dropdown opens (focus), restore all option texts so full names are visible
+    countryCodeSelect.addEventListener("focus", function() {
+        restoreAllOptionTexts();
+    });
+    
+    // When dropdown opens (mousedown), restore all option texts
+    countryCodeSelect.addEventListener("mousedown", function() {
+        restoreAllOptionTexts();
+    });
+    
+    // After selection is made, show only code
+    countryCodeSelect.addEventListener("change", function() {
+        // Small delay to ensure change event completes
+        setTimeout(() => {
+            showCodeOnly();
+        }, 10);
+    });
+    
+    // When dropdown closes (blur), show only code for selected
+    countryCodeSelect.addEventListener("blur", function() {
+        setTimeout(() => {
+            showCodeOnly();
+        }, 10);
+    });
+    
+    // Initialize: if there's a pre-selected value, show only code
+    if (countryCodeSelect.value) {
+        showCodeOnly();
+    }
+}
+
 // DOB input
 const dobInput = document.getElementById("dob");
 

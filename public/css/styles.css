@@ -505,6 +505,17 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
 }
 
+/* Hide country name in selected option - show only the code */
+.input-box.phone-code select option:checked {
+    color: #162938;
+}
+
+/* Style to show only code part when selected */
+.input-box.phone-code select {
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
 .input-box.phone-code .icon {
     right: 8px;
     font-size: 1.1em;

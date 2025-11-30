@@ -56,26 +56,43 @@ async function setupDatabase() {
         // 1. Create the database if it doesn't exist
         console.log(`Ensuring database '${DB_NAME}' exists...`);
         await setupConnection.promise().query(`CREATE DATABASE IF NOT EXISTS ${DB_NAME}`);
+		
         console.log(`Database '${DB_NAME}' is ready.`);
 
-        // 2. Read and execute the main schema file
-        let mainSchemaSql = fs.readFileSync(SQL_SCHEMA_PATH, 'utf8');
-        
-        // Remove CREATE DATABASE and USE commands if they exist in the schema file, as we handle them explicitly.
-        mainSchemaSql = mainSchemaSql.replace(/CREATE DATABASE[^;]*;/gi, '').replace(/USE[^;]*;/gi, '');
-        
-        // Before running the tables, switch context to the newly created database
-        await setupConnection.promise().query(`USE ${DB_NAME}`);
+		// 2. Switch to the database
+		await setupConnection.promise().query(`USE ${DB_NAME}`);
 
-        console.log(`Executing schema from ${SQL_SCHEMA_PATH}...`);
-        await setupConnection.promise().query(mainSchemaSql);
-        console.log('Main table (users) created/updated successfully.');
+		// 3. Read the main schema file
+		console.log(`Reading schema from ${SQL_SCHEMA_PATH}...`);
+		const mainSchemaSql = fs.readFileSync(SQL_SCHEMA_PATH, 'utf8');
+		
+		// Clean up the SQL - remove only CREATE DATABASE and USE commands (more specific patterns)
+		const cleanedSql = mainSchemaSql
+		    .replace(/CREATE\s+DATABASE\s+[^;]+;/gi, '')
+		    .replace(/USE\s+[^;]+;/gi, '')
+		    .trim();
+
+		if (!cleanedSql) {
+		    console.log('Warning: No SQL statements found in schema file after cleaning.');
+		    return;
+		}
+
+		console.log(`Executing schema (${cleanedSql.length} characters)...`);
+		
+		// Execute the entire file at once (multipleStatements is enabled)
+		await setupConnection.promise().query(cleanedSql);
+		console.log('Main table (users) created/updated successfully.');
+
         
         // 3. Read and execute the pending registrations schema file
-        const pendingRegSql = fs.readFileSync(PENDING_REG_SQL_PATH, 'utf8');
-        console.log(`Executing schema from ${PENDING_REG_SQL_PATH}...`);
-        await setupConnection.promise().query(pendingRegSql);
-        console.log('Pending registrations table created/updated successfully.');
+        if (fs.existsSync(PENDING_REG_SQL_PATH)) {
+            const pendingRegSql = fs.readFileSync(PENDING_REG_SQL_PATH, 'utf8');
+            console.log(`Executing schema from ${PENDING_REG_SQL_PATH}...`);
+            await setupConnection.promise().query(pendingRegSql);
+            console.log('Pending registrations table created/updated successfully.');
+        } else {
+            console.log('Note: pending_registrations_table.sql not found, skipping...');
+        }
 
         console.log('\n✅ Database setup complete! You can now start the server with: npm start');
 
@@ -95,16 +112,6 @@ async function setupDatabase() {
 // Check for required dependencies before running
 if (!fs.existsSync(SQL_SCHEMA_PATH)) {
     console.error(`Error: SQL schema file not found at ${SQL_SCHEMA_PATH}`);
-} else if (!fs.existsSync(PENDING_REG_SQL_PATH)) {
-    // If the file is missing, we need to create it (though it should have been created in the last step)
-    console.log(`Notice: Missing schema file: ${PENDING_REG_SQL_PATH}`);
-    // Fall through to file generation step below
-}
-
-if (!fs.existsSync(PENDING_REG_SQL_PATH)) {
-    console.log("Generating the missing 'pending_registrations_table.sql' file now.");
-    console.log("Please run 'npm run db:setup' again after this file is generated and saved.");
-
 } else {
     setupDatabase();
 }

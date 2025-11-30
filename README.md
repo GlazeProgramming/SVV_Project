@@ -1,6 +1,6 @@
-# Travel Company Website - Registration & Login System
+# Travel Company Website - Registration & Authentication System
 
-A secure user authentication system for a travel company website, featuring user registration with email verification and login functionality.
+A secure user authentication system for a travel company website, featuring user registration with token-based email verification and login functionality.
 
 ## Features
 
@@ -26,6 +26,7 @@ A secure user authentication system for a travel company website, featuring user
   - View registered users data
   - MySQL database integration
   - Encrypted storage of sensitive information
+  - Unverified accounts are automatically deleted after token expiration
 
 ## Technology Stack
 
@@ -52,61 +53,46 @@ Before running this project, ensure you have the following installed:
 
 Download the project zip file and extract it to your preferred location.
 
-### 2. Database Setup
-
-1. Open MySQL Workbench
-2. Connect to your MySQL server
-3. Open the `database.sql` file from the project
-4. Execute all lines to create the database and table:
-   ```sql
-   CREATE DATABASE userdb;
-   USE userdb;
-   CREATE TABLE users (...);
-   ```
-
-### 3. Environment Configuration
+### 2. Environment Configuration
 
 1. Locate the `.env` file in the project root
 2. Update it with your MySQL credentials:
    ```env
    DB_HOST=localhost
-   DB_USER=your_mysql_username
-   DB_PASSWORD=your_mysql_password
+   DB_USER=root
+   DB_PASS=your_mysql_password
    DB_NAME=userdb
-   ENC_KEY=your_encryption_key
-   SECRET_KEY=your_secret_key
+
+   # Application Configuration
+   PORT=3000
+
+   # Email Service (e.g., Gmail)
+   EMAIL_USER=youremail@gmail.com
+   EMAIL_PASS=your_gmail_app_password      # Crucial: Must be a Google App Password, not your account password.
+
+   # Encryption Keys (Must be strong and unique)
+   ENC_KEY=UltraSecureRandomKeyEncryptDataXYZ98765 # Must be exactly 32 bytes (32 characters)
+   SECRET_KEY=AnotherStrongRandomKeyForIV
    ```
 
-### 4. Install Dependencies
+### 3. Install Dependencies
 
-1. Navigate to the project directory in File Explorer
-2. Click on the address bar and type `cmd`, then press Enter
-3. In the Command Prompt, run the following commands:
+1. Navigate to the project directory in your terminal or Command Prompt.
 
-```bash
-# Update npm to latest version
-npm install -g npm@11.6.4
+2. Run the following command. This will read the package.json file and install all necessary packages, including server dependencies (like Express, MySQL2) and development tools (like Nodemon).
 
-# Install required packages
-npm install express mysql2 bcryptjs cors dotenv nodemailer
-
-# Install development dependencies
-npm install --save-dev nodemon
-```
-
-### 5. Email Configuration
-
-If you want to use your own Gmail for sending verification emails:
-
-1. Open `register.js` in the `routes` folder
-2. Update the nodemailer configuration:
-   ```javascript
-   auth: {
-       user: 'your_email@gmail.com',
-       pass: 'your_app_password',
-   }
+   ```installations
+   npm install
    ```
-3. **Note**: You need to generate an [App Password](https://support.google.com/accounts/answer/185833) from your Google Account settings
+
+
+### 4. Database Setup
+
+use the dedicated setup script to build the database structure defined in database.sql:
+
+   ```sql
+   npm run db:setup
+   ```
 
 ## Running the Application
 
@@ -134,6 +120,7 @@ SVV_PROJECT/
 │   ├── css/
 │   │   ├── background.jpg
 │   │   └── styles.css
+│   │   └── Travel.ico
 │   ├── js/
 │   │   ├── activate.js
 │   │   ├── getdata.js
@@ -144,9 +131,13 @@ SVV_PROJECT/
 │   ├── login.html
 │   ├── pixel.png
 │   └── signup.html
+│   └── success.html
+│   └── terms.html
 ├── routes/
 │   ├── login.js
 │   └── register.js
+├── scripts/
+│   ├── db_setup.js
 ├── src/
 ├── .classpath
 ├── .env
@@ -157,6 +148,7 @@ SVV_PROJECT/
 ├── index.js
 ├── package-lock.json
 └── package.json
+└── pending_registrations_table.sql
 ```
 
 ## Usage Flow
@@ -221,19 +213,4 @@ SVV_PROJECT/
 
 ## Development Notes
 
-This project was developed as an assignment focusing on the registration and login functionality for a travel company website. Future enhancements could include:
-
-- Password reset functionality
-- User profile management
-- Session management with JWT
-- Social media authentication
-- Extended token validity period
-- Admin dashboard
-
-## Contributors
-
-Developed as part of a web development assignment.
-
-## License
-
-This project is for educational purposes.
+This project was developed as an assignment focusing on the registration and login functionality for a travel company website. 

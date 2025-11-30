@@ -1,10 +1,7 @@
-CREATE DATABASE userdb;
+CREATE DATABASE IF NOT EXISTS userdb;
 USE userdb;
- /*
-SELECT * FROM USERS;
-DROP TABLE users;
-*/
-CREATE TABLE users (
+
+CREATE TABLE IF NOT EXISTS users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     firstname VARCHAR(100) NOT NULL,
     lastname VARCHAR(100),
@@ -18,7 +15,3 @@ CREATE TABLE users (
     is_verified BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
-
-
-

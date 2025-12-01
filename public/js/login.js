@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (result.success) {
                 setTimeout(() => {
                     window.location.href = "success.html"; // redirect to success page after login
-                }, 1000);
+                }, 2000);
             }
         } catch (err) {
             console.error(err);

@@ -193,6 +193,16 @@ form.addEventListener("submit", async function (e) {
         showError("Lastname can only contain letters and spaces.");
         return;
     }
+	
+	const usernameRegex = /^[A-Za-z0-9_]+$/;
+	if (username.length < 3) {
+	    showError("Username must be at least 3 characters long.");
+	    return;
+	}
+	if (!usernameRegex.test(username)) {
+	    showError("Username can only contain letters, numbers, and underscores.");
+	    return;
+	}
 
 	// New Local Number Format and Length Check
 	const localNumberRegex = /^[0-9]+$/; 

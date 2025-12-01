@@ -67,6 +67,40 @@ router.get("/getdata", async (req, res) => {
 async function proceedToUsernameCheck(req, res, username, email, password) {
     // Re-declare local variables needed in this scope
     const { firstname, lastname, dob, phonenumber } = req.body;
+	
+	// Username format validation
+	const usernameRegex = /^[A-Za-z0-9_]+$/;
+	if (username.length < 3) {
+	    return res.status(400).json({ 
+	        success: false, 
+	        message: "Username must be at least 3 characters long." 
+	    });
+	}
+	if (!usernameRegex.test(username)) {
+	    return res.status(400).json({ 
+	        success: false, 
+	        message: "Username can only contain letters, numbers, and underscores." 
+	    });
+	}
+	
+	const dobDate = new Date(dob);
+	const today = new Date();
+	const age = today.getFullYear() - dobDate.getFullYear() - 
+	    (today.getMonth() < dobDate.getMonth() || 
+	     (today.getMonth() === dobDate.getMonth() && today.getDate() < dobDate.getDate()) ? 1 : 0);
+
+	if (age < 18) {
+	    return res.status(400).json({ 
+	        success: false, 
+	        message: "You must be at least 18 years old to register." 
+	    });
+	}
+	if (age > 100) {
+	    return res.status(400).json({ 
+	        success: false, 
+	        message: "Invalid date of birth." 
+	    });
+	}
     
     // Check username uniqueness - only check verified users
     const checkUsernameQuery = "SELECT id FROM users WHERE username = ? AND is_verified = 1 LIMIT 1";
@@ -234,7 +268,7 @@ router.post("/register", async (req, res) => {
     }
 
     // Phonenumber Format Validation
-	const combinedPhoneRegex = /^\+\d{7,20}$/; 
+	const combinedPhoneRegex = /^\+\d{8,19}$/;
     if (!combinedPhoneRegex.test(phonenumber)) {
         return res.status(400).json({ 
             success: false, 
@@ -365,6 +399,14 @@ router.post("/activate", (req, res) => {
                 message: "Invalid registration data"
             });
         }
+		
+		// Token format validation
+		if (!/^[a-f0-9]{64}$/i.test(token)) {
+		    return res.status(400).json({
+		        success: false,
+		        message: "Invalid token format"
+		    });
+		}
 
         // Verify token matches
         if (pendingData.token !== token) {

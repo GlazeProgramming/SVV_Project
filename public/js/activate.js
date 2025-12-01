@@ -15,6 +15,19 @@ document.getElementById("activateForm").addEventListener("submit", async functio
         msg.classList.add("visible", "error");
         return;
     }
+	
+	if (token.length < 20) {
+	    msg.textContent = "Invalid token format. Please check your email.";
+	    msg.classList.add("visible", "error");
+	    return;
+	}
+
+	const tokenRegex = /^[A-Za-z0-9-_]+$/;
+	if (!tokenRegex.test(token)) {
+	    msg.textContent = "Invalid token format. Token contains invalid characters.";
+	    msg.classList.add("visible", "error");
+	    return;
+	}
 
     try {
         const response = await fetch("/activate", {

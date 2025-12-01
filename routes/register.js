@@ -97,7 +97,7 @@ router.get("/getdata", publicReadLimiter, async (req, res) => {
     );
 });
 
-function updatePendingUser(existingUserId, finalUsername, email, hashedPassword, pendingData, expiresAt, callback) {
+function updatePendingUser(existingUserId, finalUsername, email, hashedPassword, verificationToken, pendingData, expiresAt, callback) {
     const updateQuery = `
         UPDATE users SET 
             firstname = 'PENDING',
@@ -116,7 +116,7 @@ function updatePendingUser(existingUserId, finalUsername, email, hashedPassword,
     `;
 
     db.query(updateQuery,
-        [finalUsername, email, hashedPassword, verificationToken, pendingData, expiresAt, existingUserId], 
+        [finalUsername, email, hashedPassword, verificationToken, pendingData, expiresAt, existingUserId],
         (err, result) => {
         if (err) return callback(err);
         callback(null);
@@ -251,6 +251,7 @@ async function proceedToUsernameCheck(req, res, username, email, password, exist
                 finalUsername,
                 email,
                 hashedPassword,
+                verificationToken,
                 pendingData,
                 expiresAt,
                 (err) => {

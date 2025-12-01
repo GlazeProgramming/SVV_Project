@@ -507,10 +507,11 @@ router.post("/activate", activateLimiter, (req, res) => {
 
     // Check for pending registration
     const sql = `
-        SELECT id, is_verified, verification_token, token_expires_at
+        SELECT id, is_verified, verification_token, token_expires_at, pending_data
         FROM users 
         WHERE username = ? AND is_verified = 0
     `;
+
 
     db.query(sql, [trimmedUsername], (err, rows) => {
         if (err) {
@@ -531,17 +532,24 @@ router.post("/activate", activateLimiter, (req, res) => {
         const user = rows[0];
 
         // Parse the stored JSON data
-        let pendingData;
-        try {
-            pendingData = JSON.parse(user.pending_data);
-        } catch (parseErr) {
-            console.error("Error parsing pending data:", parseErr);
-            return res.status(500).json({
+        if (!user.pending_data) {
+            return res.status(400).json({
                 success: false,
-                message: "Invalid registration data"
+                message: "Pending data missing or invalid. Please register again."
             });
         }
 
+        let pendingData;
+        try {
+            pendingData = JSON.parse(user.pending_data);
+        } catch (error) {
+            console.error("Error parsing pending data:", error);
+            return res.status(400).json({
+                success: false,
+                message: "Invalid pending data format. Please register again."
+            });
+        }
+        
         // Verify token matches
         if (pendingData.token !== token) {
             return res.status(400).json({
